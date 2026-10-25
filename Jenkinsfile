@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME    = "flask-devops-app"
+        IMAGE_NAME     = "flask-devops-app"
         CONTAINER_NAME = "flask-app"
-        APP_PORT      = "5000"
-        HOST_PORT     = "5000"
+        APP_PORT       = "5000"
+        HOST_PORT      = "5000"
     }
 
     stages {
@@ -28,11 +28,10 @@ pipeline {
             steps {
                 echo "========== Stage: Install Dependencies =========="
                 sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip3 install --upgrade pip --quiet
+                    pip3 install -r requirements.txt --quiet
                     echo "Dependencies installed."
+                    pip3 show flask pytest
                 '''
             }
         }
@@ -43,10 +42,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo "========== Stage: Run Tests =========="
-                sh '''
-                    . venv/bin/activate
-                    pytest test_app.py -v --tb=short
-                '''
+                sh 'python3 -m pytest test_app.py -v --tb=short'
             }
         }
 
@@ -96,9 +92,6 @@ pipeline {
                     # Give the container a moment to start
                     sleep 5
 
-                    # Curl the health endpoint from inside the Jenkins container.
-                    # The Flask container is on the Docker host network, so we
-                    # use host.docker.internal (resolves to the Docker host).
                     HTTP_CODE=$(curl -s -o /tmp/health_response.txt -w "%{http_code}" \
                         http://host.docker.internal:${HOST_PORT}/health)
 
@@ -107,9 +100,9 @@ pipeline {
                     echo ""
 
                     if [ "$HTTP_CODE" = "200" ]; then
-                        echo "✅ Deployment verified successfully (HTTP 200)."
+                        echo "Deployment verified successfully (HTTP 200)."
                     else
-                        echo "❌ Health check failed (HTTP ${HTTP_CODE})."
+                        echo "Health check failed (HTTP ${HTTP_CODE})."
                         exit 1
                     fi
                 '''
@@ -122,14 +115,10 @@ pipeline {
     // ------------------------------------------------------------------
     post {
         success {
-            echo "✅ Pipeline completed successfully! Flask app is live on port ${HOST_PORT}."
+            echo "Pipeline completed successfully! Flask app is live on port ${HOST_PORT}."
         }
         failure {
-            echo "❌ Pipeline failed. Check the stage logs above for details."
-        }
-        always {
-            // Clean up the Python virtual environment to keep the workspace tidy
-            sh 'rm -rf venv || true'
+            echo "Pipeline failed. Check the stage logs above for details."
         }
     }
 }
