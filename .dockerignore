@@ -1,0 +1,13 @@
+# Files/directories to exclude from the Docker image build context
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.venv/
+venv/
+.pytest_cache/
+*.md
+Jenkinsfile
+test_app.py
+.dockerignore
