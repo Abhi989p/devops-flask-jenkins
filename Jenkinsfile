@@ -28,10 +28,9 @@ pipeline {
             steps {
                 echo "========== Stage: Install Dependencies =========="
                 sh '''
-                    pip3 install --upgrade pip --quiet
-                    pip3 install -r requirements.txt --quiet
+                    python3 -m pip install -r requirements.txt --break-system-packages -q
                     echo "Dependencies installed."
-                    pip3 show flask pytest
+                    python3 -m pip show flask pytest
                 '''
             }
         }
@@ -66,11 +65,9 @@ pipeline {
             steps {
                 echo "========== Stage: Deploy Container =========="
                 sh '''
-                    # Stop and remove any existing container (idempotent)
                     docker stop ${CONTAINER_NAME} 2>/dev/null || true
                     docker rm   ${CONTAINER_NAME} 2>/dev/null || true
 
-                    # Run the new container
                     docker run -d \
                         --name ${CONTAINER_NAME} \
                         -p ${HOST_PORT}:${APP_PORT} \
@@ -89,7 +86,6 @@ pipeline {
             steps {
                 echo "========== Stage: Verify Deployment =========="
                 sh '''
-                    # Give the container a moment to start
                     sleep 5
 
                     HTTP_CODE=$(curl -s -o /tmp/health_response.txt -w "%{http_code}" \
@@ -110,9 +106,6 @@ pipeline {
         }
     }
 
-    // ------------------------------------------------------------------
-    // Post-build notifications
-    // ------------------------------------------------------------------
     post {
         success {
             echo "Pipeline completed successfully! Flask app is live on port ${HOST_PORT}."
