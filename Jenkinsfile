@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo "========== Stage: Install Dependencies =========="
                 sh '''
-                    python3 -m pip install -r requirements.txt --break-system-packages -q
+                    python3 -m pip install -r requirements.txt --break-system-packages --ignore-installed -q
                     echo "Dependencies installed."
                     python3 -m pip show flask pytest
                 '''
